@@ -1,0 +1,86 @@
+---
+title: "p8105_hw3_bsr2136"
+author: "Barik Rajpal"
+date: "10/10/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Problem 0
+
+```{r Problem 0}
+dir.create("files_for_hw3")
+```
+
+## Problem 1
+
+### Describing the dataset
+
+```{r Problem 1a}
+library(p8105.datasets)
+data("instacart")
+
+## The number of rows in the dataset is
+nrow(instacart)
+## The number of columns in the dataset is
+ncol(instacart)
+
+## The dataset has identifying information such as order, product, and user.
+## The number of unique orders in the dataset is
+length(unique(pull(instacart,order_id)))
+##Which is equal to the number of unique users
+length(unique(pull(instacart,user_id)))
+## The number of unique products is
+length(unique(pull(instacart,product_id)))
+
+## The dataset gives information such as aisle and department of the
+## product ordered. The departments are
+unique(pull(instacart,department))
+
+## The dataset also gives the hour of day that the order was made
+## The most common hour at which an order was made is
+instacart %>% group_by(order_hour_of_day) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n)) %>%
+  .[1,1]
+```
+
+### Answering prompts about the dataset
+
+1. How many aisles are there, and which aisles are the most items ordered from?
+2. Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+3. Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+4. Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+
+```{r Problem 1b}
+
+## 1. The number of aisles are
+length(unique(pull(instacart,aisle)))
+## And the aisles that the most items are ordered from are
+instacart %>% group_by(aisle) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n)) %>%
+  head()
+
+## 2. 
+aisle_plot <- instacart %>% 
+  group_by(aisle) %>%
+  summarise(n = n()) %>%
+  filter(n>=10000) %>%
+  arrange(n)
+
+aisle_plot$aisle <- factor(pull(aisle_plot,aisle),
+                                 levels = pull(aisle_plot,aisle)[order(pull(aisle_plot,n))])
+  
+ aisle_plot %>% 
+  ggplot(aes(y=aisle,x=n)) + 
+  geom_point()
+
+
+
+```
+
