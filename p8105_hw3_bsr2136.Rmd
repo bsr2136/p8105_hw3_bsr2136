@@ -67,16 +67,14 @@ instacart %>% group_by(aisle) %>%
   head()
 
 ## 2. 
-aisle_plot <- instacart %>% 
+instacart %>% 
   group_by(aisle) %>%
   summarise(n = n()) %>%
   filter(n>=10000) %>%
-  arrange(n)
-
-aisle_plot$aisle <- factor(pull(aisle_plot,aisle),
-                                 levels = pull(aisle_plot,aisle)[order(pull(aisle_plot,n))])
-  
- aisle_plot %>% 
+  arrange(n) %>%
+  mutate(
+    aisle = factor(pull(aisle_plot,aisle),
+                                 levels = pull(aisle_plot,aisle)[order(pull(aisle_plot,n))])) %>% 
   ggplot(aes(y=aisle,x=n)) + 
   geom_point()
 
