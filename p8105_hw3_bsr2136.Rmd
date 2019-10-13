@@ -12,7 +12,7 @@ library(tidyverse)
 
 ## Problem 0
 
-```{r Problem 0}
+```{r Problem 0,warning=FALSE}
 dir.create("files_for_hw3")
 ```
 
@@ -52,32 +52,111 @@ instacart %>% group_by(order_hour_of_day) %>%
 ### Answering prompts about the dataset
 
 1. How many aisles are there, and which aisles are the most items ordered from?
-2. Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
-3. Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
-4. Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
 
-```{r Problem 1b}
-
-## 1. The number of aisles are
+```{r Problem 1.1}
+## The number of aisles are
 length(unique(pull(instacart,aisle)))
 ## And the aisles that the most items are ordered from are
 instacart %>% group_by(aisle) %>%
   summarise(n = n()) %>%
   arrange(desc(n)) %>%
   head()
+```
 
-## 2. 
-instacart %>% 
+2. Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+
+```{r Problem 1.2}
+aisle_tbl <- instacart %>% 
   group_by(aisle) %>%
   summarise(n = n()) %>%
   filter(n>=10000) %>%
-  arrange(n) %>%
-  mutate(
-    aisle = factor(pull(aisle_plot,aisle),
-                                 levels = pull(aisle_plot,aisle)[order(pull(aisle_plot,n))])) %>% 
-  ggplot(aes(y=aisle,x=n)) + 
-  geom_point()
+  arrange(n)
 
+aisle_tbl %>%
+  mutate(
+    aisle = factor(pull(aisle_tbl,aisle),
+                levels = pull(aisle_tbl,aisle)[order(pull(aisle_tbl,n))])) %>% 
+  ggplot(aes(x=aisle,y=n)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + xlab("Aisle") + ylab("Number of Items Ordered")
+```
+
+3. Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+
+```{r Problem 1.3}
+baking <- instacart %>%
+  filter(aisle == "baking ingredients") %>%
+  group_by(aisle,product_name) %>%
+  summarise(number_of_times_ordered = n()) %>%
+  arrange(desc(number_of_times_ordered)) %>%
+  head(3)
+
+dog_food <- instacart %>%
+  filter(aisle == "dog food care") %>%
+  group_by(aisle,product_name) %>%
+  summarise(number_of_times_ordered = n()) %>%
+  arrange(desc(number_of_times_ordered)) %>%
+  head(3)
+
+pack_veg <- instacart %>%
+  filter(aisle == "packaged vegetables fruits") %>%
+  group_by(aisle,product_name) %>%
+  summarise(number_of_times_ordered = n()) %>%
+  arrange(desc(number_of_times_ordered)) %>%
+  head(3)
+
+rbind(baking,dog_food,pack_veg) %>%
+  knitr::kable()
+```
+
+4. Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+
+```{r Problem 1.4}
+day_of_week <- instacart %>%
+  filter(product_name == "Pink Lady Apples" | product_name == "Coffee Ice Cream") %>%
+  group_by(product_name,order_dow) %>%
+  summarise(mean_hour = mean(order_hour_of_day)) %>%
+  pivot_wider(names_from = order_dow,
+              values_from = mean_hour)
+
+names(day_of_week)[2:8] <- c("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday")
+
+knitr::kable(day_of_week)
+```
+
+## Problem 2
+
+### Data Loading and Cleaning
+
+```{r Problem 2a}
+library(p8105.datasets)
+data("brfss_smart2010")
+
+unique(pull(brfss_smart2010,Locationabbr))
+## This is just state, so I'm going to call it that
+
+unique(pull(brfss_smart2010,Locationdesc))
+## This is just county, so I'm going to call it that
+
+names(brfss_smart2010)[2:3] = c("state","county")
+
+brfss <- brfss_smart2010 %>%
+  janitor::clean_names() %>%
+  filter(topic == "Overall Health") %>%
+  filter(response %in% c("Poor","Fair","Good","Very good","Excellent")) %>%
+  mutate(response = factor(response, levels = c("Poor","Fair","Good","Very good","Excellent")))
+
+unique(pull(brfss,data_value_unit))
+## So I'm going to get rid of that column and rename data_value to indicate that it is a %
+unique(pull(brfss,location_id))
+unique(pull(brfss,data_value_footnote_symbol))
+## And get rid of those as well
+
+names(brfss)[9] = "percent_responded"
+
+brfss <- brfss %>%
+  select(-data_value_unit,-location_id,-data_value_footnote_symbol)
+  
 
 
 ```
