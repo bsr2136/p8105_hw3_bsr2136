@@ -231,7 +231,7 @@ From 2006 to 2010, the amount of "Excellent" and "Very good" responses incrased 
 
 ### Loading, tidying, and wrangling the data
 
-```{r Problem 3.1}
+```{r Problem 3.1, message = FALSE}
 accel <- read_csv("./files_for_hw3/accel_data.csv") %>%
   mutate(weekend = ifelse(day %in% c("Saturday","Sunday"),1,0),
          day = factor(day, levels = c("Sunday","Monday","Tuesday","Wednesday",
@@ -247,7 +247,7 @@ The resulting dataset has 35 observations of 1444 varibles, 1440 of those variab
 ```{r Problem 3.2}
 accel_agg <- accel %>%
   mutate(total_activity = rowSums(accel[5:1444])) %>%
-  select(day_id, total_activity) 
+  select(day_id, total_activity)
 
 accel_agg %>%
   knitr::kable()
@@ -259,6 +259,22 @@ The first thing that stands out to me is that on day 24 and day 31, there total_
 ### Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
 
 ```{r Problem 3.3}
-
+accel %>%
+  pivot_longer(activity_1:activity_1440,
+               names_to = "time_of_day",
+               values_to = "activity") %>%
+  mutate(time_of_day = as.numeric(
+    str_replace(time_of_day,"activity_",""))) %>%
+  ggplot(aes(x=time_of_day,y=activity, group = day_id)) +
+  geom_line(aes(color=day))
 ```
 
+Some noticeable patterns/conclusions include:
+
+* During the middle of the day, there is the most activity on Saturday and Sunday
+
+* Towards the end of the day, there is the most activity on Monday and Friday 
+
+* On many days there are clusters of higher than usual activity about 400-480 minutes through the day, 600-750 minutes through the day, 950-1050 minutes through the day, and 1200-1400 minutes through the day.
+
+* In general, the most activity seems to be on Saturday and Sunday
